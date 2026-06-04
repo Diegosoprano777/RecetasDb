@@ -1,1 +1,44 @@
-/* You can add global styles to this file, and also import other style files */
+/* Importar fuentes Google Fonts: Playfair Display (titulares elegantes y tradicionales) y Quicksand (texto redondeado y cálido) */
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Quicksand:wght@300..700&display=swap');
+
+/* Resets Globales Caribeños Tradicionales */
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  background-color: #FAF6F0; /* Color arena de playa cálida */
+  color: #2E2214; /* Cacao / Madera oscura */
+  overflow-x: hidden;
+  font-family: 'Quicksand', sans-serif;
+  scroll-behavior: smooth;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+/* Títulos con fuente Serif tradicional */
+h1, h2, h3, h4, .font-serif {
+  font-family: 'Playfair Display', Georgia, serif;
+}
+
+/* Personalización del Scrollbar en tonos caribeños */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: #FAF6F0;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #E0CEB8; /* Rattan claro / Madera */
+  border-radius: 6px;
+  border: 3px solid #FAF6F0;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #F26430; /* Papaya atardecer en hover */
+}
