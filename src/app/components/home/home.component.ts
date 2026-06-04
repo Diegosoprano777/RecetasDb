@@ -81,11 +81,17 @@ export class HomeComponent implements OnInit {
 
   loadRecommendedRecipes(): void {
     this.isLoading.set(true);
-    this.recipeService.searchRecipes('Dessert').subscribe({
+    // Cargamos 3 recetas aleatorias en paralelo
+    forkJoin([
+      this.recipeService.getRandomRecipe(),
+      this.recipeService.getRandomRecipe(),
+      this.recipeService.getRandomRecipe(),
+    ]).subscribe({
       next: results => {
-        // Mostrar 3 recomendaciones
-        const translated = results.slice(0, 3).map(r => this.translateCardFields(r));
-        this.recipes.set(translated);
+        const validRecipes = results
+          .filter((r): r is Recipe => r !== null)
+          .map(r => this.translateCardFields(r));
+        this.recipes.set(validRecipes);
         this.isLoading.set(false);
       },
       error: () => {

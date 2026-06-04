@@ -10,7 +10,7 @@ export class TranslationService {
   private readonly cache = new Map<string, string>();
   private readonly MAX_CHUNK = 480;
 
-  // ─── Diccionario local (sin claves duplicadas) ───────────────────────────
+  // ─── Diccionario local completo ───────────────────────────────────────────
   private readonly DICTIONARY: Record<string, string> = {
     // Categorías TheMealDB
     'Beef':          'Carne de res',
@@ -218,20 +218,91 @@ export class TranslationService {
     'Walnut':              'Nuez',
     'Peanut':              'Cacahuate',
 
+    // ── Palabras sueltas para títulos de recetas ──────────────────────────
+    'Baked':       'Al horno',
+    'Fried':       'Frito',
+    'Grilled':     'A la parrilla',
+    'Roasted':     'Asado',
+    'Steamed':     'Al vapor',
+    'Stewed':      'Estofado',
+    'Stew':        'Estofado',
+    'Soup':        'Sopa',
+    'Salad':       'Ensalada',
+    'Cake':        'Pastel',
+    'Pie':         'Tarta',
+    'Pudding':     'Pudín',
+    'Curry':       'Curry',
+    'Stir':        'Salteado',
+    'Pot':         'Olla',
+    'Bowl':        'Tazón',
+    'Roll':        'Rollo',
+    'Rolls':       'Rollos',
+    'Wrap':        'Envuelto',
+    'Burger':      'Hamburguesa',
+    'Sandwich':    'Sándwich',
+    'Taco':        'Taco',
+    'Tacos':       'Tacos',
+    'Noodle':      'Fideos',
+    'Noodles':     'Fideos',
+    'Dumplings':   'Empanadillas',
+    'Wings':       'Alitas',
+    'Ribs':        'Costillas',
+    'Chops':       'Chuletas',
+    'Meatballs':   'Albóndigas',
+    'Stuffed':     'Relleno',
+    'Smoked':      'Ahumado',
+    'Spicy':       'Picante',
+    'Sweet':       'Dulce',
+    'Sour':        'Ácido',
+    'Crispy':      'Crujiente',
+    'Creamy':      'Cremoso',
+    'Chorizo':     'Chorizo',
+    'Braised':     'Braseado',
+    'Slow':        'Lento',
+    'Cooked':      'Cocido',
+    'with':        'con',
+    'and':         'y',
+    'in':          'en',
+    'of':          'de',
+    'the':         'el',
+    'a':           'un',
+
     // Medidas comunes
-    'to taste':            'al gusto',
-    'as needed':           'según necesidad',
-    'handful':             'un puñado',
-    'pinch':               'una pizca',
+    'to taste':    'al gusto',
+    'as needed':   'según necesidad',
+    'handful':     'un puñado',
+    'pinch':       'una pizca',
   };
 
-  /** Traducción instantánea desde el diccionario local. Sin API. */
+  /**
+   * Traducción instantánea desde el diccionario local.
+   * Hace lookup exacto primero; si falla, traduce palabra por palabra.
+   */
   translateInstant(text: string): string {
     if (!text) return text;
-    return this.DICTIONARY[text.trim()] ?? text;
+    const trimmed = text.trim();
+
+    // 1. Lookup exacto
+    if (this.DICTIONARY[trimmed]) return this.DICTIONARY[trimmed];
+
+    // 2. Traducción palabra a palabra para títulos compuestos
+    const translated = trimmed
+      .split(/(\s+|&)/)
+      .map(token => {
+        const t = token.trim();
+        if (!t || t === '&') return t;
+        // Intentar lookup de la palabra (case-insensitive)
+        const entry = Object.keys(this.DICTIONARY).find(
+          k => k.toLowerCase() === t.toLowerCase()
+        );
+        return entry ? this.DICTIONARY[entry] : t;
+      })
+      .join('');
+
+    return translated;
   }
 
-  // ─── Traducción vía API (para textos largos como instrucciones / títulos) ─
+  // ─── Traducción vía API (para instrucciones largas) ───────────────────────
 
   private splitIntoChunks(text: string): string[] {
     const chunks: string[] = [];
