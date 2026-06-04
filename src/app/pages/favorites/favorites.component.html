@@ -1,0 +1,41 @@
+<div class="favorites-page-container">
+  <div class="favorites-header">
+    <h2>Mis Recetas Favoritas</h2>
+    <p class="subtitle">Guarda tus delicias caribeñas preferidas para verlas cuando quieras.</p>
+  </div>
+
+  @if (favorites().length === 0) {
+    <div class="empty-container">
+      <div class="empty-icon">🥥</div>
+      <h3>Aún no tienes favoritos</h3>
+      <p>Explora nuestras recetas y guarda tus preferidas pulsando el botón de estrella en su detalle.</p>
+      <button class="btn btn-primary" routerLink="/search">Explorar Recetas</button>
+    </div>
+  } @else {
+    <div class="recipes-grid">
+      @for (recipe of favorites(); track recipe.idMeal) {
+        <div class="recipe-card" (click)="viewDetails(recipe.idMeal)">
+          <div class="card-image-wrapper">
+            <img [src]="recipe.strMealThumb" [alt]="recipe.strMeal" loading="lazy" />
+            <div class="card-badges">
+              <span class="category-tag">{{ recipe.strCategory }}</span>
+            </div>
+            <button class="btn-remove-fav" (click)="removeFavorite(recipe.idMeal, $event)" title="Quitar de favoritos">
+              ✕
+            </button>
+          </div>
+          <div class="card-body">
+            <h3>{{ recipe.strMeal }}</h3>
+            <div class="card-meta">
+              <span class="meta-item"><span class="icon">🌍</span> {{ recipe.strArea }}</span>
+            </div>
+            <p class="card-excerpt">{{ recipe.strInstructions | slice:0:100 }}...</p>
+            <button class="btn-card-action">
+              Ver preparación <span class="arrow">→</span>
+            </button>
+          </div>
+        </div>
+      }
+    </div>
+  }
+</div>

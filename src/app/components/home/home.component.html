@@ -11,7 +11,7 @@
             <span class="meta-badge"><span class="icon">🌍</span> {{ featuredRecipe()?.strArea }}</span>
           </div>
           <p class="hero-description">{{ featuredRecipe()?.strInstructions | slice:0:180 }}...</p>
-          <button class="btn btn-primary animate-btn" (click)="selectRecipe(featuredRecipe()!)">
+          <button class="btn btn-primary animate-btn" [routerLink]="['/details', featuredRecipe()?.idMeal]">
             <span class="icon">📖</span> Ver Receta Completa
           </button>
         </div>
@@ -22,47 +22,25 @@
   <div class="hero-skeleton skeleton"></div>
 }
 
-<!-- Search & Filter Area -->
-<section class="search-section">
-  <div class="search-wrapper">
-    <div class="search-input-group">
-      <span class="search-icon">🔍</span>
-      <input 
-        type="text" 
-        placeholder="Buscar recetas por ingrediente o nombre... (ej: Chicken, Beef)" 
-        [ngModel]="searchQuery()" 
-        (ngModelChange)="searchQuery.set($event)"
-        (keyup.enter)="search()"
-      />
-      <button class="btn btn-search" (click)="search()">Buscar</button>
-    </div>
-  </div>
-
-  <!-- Category Chips -->
-  <div class="chips-container">
-    @for (chip of searchChips; track chip.value) {
-      <button 
-        class="chip" 
-        [class.active]="searchQuery().toLowerCase() === chip.value.toLowerCase()" 
-        (click)="search(chip.value)">
-        {{ chip.label }}
-      </button>
-    }
+<!-- Welcome Section -->
+<section class="welcome-banner">
+  <div class="banner-content">
+    <h3>¡Descubre el sabor tradicional!</h3>
+    <p>Explora una selección única de recetas tradicionales y delicias caribeñas cocinadas paso a paso en español.</p>
+    <button class="btn btn-primary" routerLink="/search">🔍 Empezar a Buscar</button>
   </div>
 </section>
 
-<!-- Results Section -->
+<!-- Recommendations Section -->
 <section class="results-section">
   <div class="results-header">
-    <h2>Explorar Recetas</h2>
-    @if (recipes().length > 0 && !isLoading()) {
-      <span class="results-count">{{ recipes().length }} encontradas</span>
-    }
+    <h2>Recomendaciones del Chef</h2>
+    <span class="results-count">Selección de la casa</span>
   </div>
 
   @if (isLoading()) {
     <div class="recipes-grid">
-      @for (i of [1, 2, 3, 4, 5, 6]; track i) {
+      @for (i of [1, 2, 3]; track i) {
         <div class="card-skeleton">
           <div class="skeleton-img skeleton"></div>
           <div class="skeleton-text skeleton h20 w70"></div>
@@ -71,23 +49,10 @@
         </div>
       }
     </div>
-  } @else if (errorMessage()) {
-    <div class="error-container">
-      <div class="error-icon">⚠️</div>
-      <h3>¡Oops! Algo salió mal</h3>
-      <p>{{ errorMessage() }}</p>
-      <button class="btn btn-outline" (click)="search('Chicken')">Reintentar</button>
-    </div>
-  } @else if (recipes().length === 0) {
-    <div class="empty-container">
-      <div class="empty-icon">🥗</div>
-      <h3>No se encontraron recetas</h3>
-      <p>Intenta buscar con otros ingredientes o palabras clave.</p>
-    </div>
   } @else {
     <div class="recipes-grid">
       @for (recipe of recipes(); track recipe.idMeal) {
-        <div class="recipe-card" (click)="selectRecipe(recipe)">
+        <div class="recipe-card" [routerLink]="['/details', recipe.idMeal]">
           <div class="card-image-wrapper">
             <img [src]="recipe.strMealThumb" [alt]="recipe.strMeal" loading="lazy" />
             <div class="card-badges">
@@ -109,66 +74,3 @@
     </div>
   }
 </section>
-
-<!-- Recipe Details Modal -->
-@if (selectedRecipe()) {
-  <div class="modal-overlay" (click)="closeModal()">
-    <div class="modal-container" (click)="$event.stopPropagation()">
-      <button class="modal-close-btn" (click)="closeModal()">✕</button>
-      
-      <div class="modal-content-grid">
-        <!-- Left Panel: Image -->
-        <div class="modal-media-panel">
-          <img [src]="selectedRecipe()?.strMealThumb" [alt]="selectedRecipe()?.strMeal" />
-          <div class="modal-media-overlay">
-            <h2>{{ selectedRecipe()?.strMeal }}</h2>
-            <div class="badges-row">
-              <span class="badge badge-primary">{{ selectedRecipe()?.strCategory }}</span>
-              <span class="badge badge-secondary">{{ selectedRecipe()?.strArea }}</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Right Panel: Scrollable Info -->
-        <div class="modal-info-panel">
-          <!-- Translating Indicator -->
-          @if (isTranslating()) {
-            <div class="translation-loader">
-              <span class="palm-icon">🌴</span>
-              <span>Traduciendo preparación al español...</span>
-            </div>
-          }
-
-          <!-- Ingredients Section -->
-          <div class="info-section">
-            <h4 class="section-title"><span class="icon">🍍</span> Ingredientes</h4>
-            <div class="ingredients-grid">
-              @for (item of selectedRecipe()?.ingredients; track item.name) {
-                <div class="ingredient-tag">
-                  <span class="ing-name">{{ item.name }}</span>
-                  <span class="ing-measure">{{ item.measure }}</span>
-                </div>
-              }
-            </div>
-          </div>
-
-          <!-- Preparation Section -->
-          <div class="info-section">
-            <h4 class="section-title"><span class="icon">🍳</span> Preparación</h4>
-            <p class="instructions-text">{{ selectedRecipe()?.strInstructions }}</p>
-          </div>
-
-          <!-- YouTube Video Section -->
-          @if (selectedRecipe()?.strYoutube) {
-            <div class="info-section">
-              <h4 class="section-title"><span class="icon">📺</span> Video Tutorial</h4>
-              <a [href]="selectedRecipe()?.strYoutube" target="_blank" class="btn btn-video">
-                Ver en YouTube
-              </a>
-            </div>
-          }
-        </div>
-      </div>
-    </div>
-  </div>
-}

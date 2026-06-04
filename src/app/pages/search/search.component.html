@@ -1,0 +1,89 @@
+<div class="search-page-container">
+  <!-- Search & Filter Area -->
+  <section class="search-section">
+    <div class="search-wrapper">
+      <div class="search-input-group">
+        <span class="search-icon">🔍</span>
+        <input 
+          type="text" 
+          placeholder="Buscar recetas por ingrediente o nombre... (ej: Chicken, Beef)" 
+          [ngModel]="searchQuery()" 
+          (ngModelChange)="searchQuery.set($event)"
+          (keyup.enter)="search()"
+        />
+        <button class="btn btn-search" (click)="search()">Buscar</button>
+      </div>
+    </div>
+
+    <!-- Category Chips -->
+    <div class="chips-container">
+      @for (chip of searchChips; track chip.value) {
+        <button 
+          class="chip" 
+          [class.active]="searchQuery().toLowerCase() === chip.value.toLowerCase()" 
+          (click)="search(chip.value)">
+          {{ chip.label }}
+        </button>
+      }
+    </div>
+  </section>
+
+  <!-- Results Section -->
+  <section class="results-section">
+    <div class="results-header">
+      <h2>Explorar Recetas</h2>
+      @if (recipes().length > 0 && !isLoading()) {
+        <span class="results-count">{{ recipes().length }} encontradas</span>
+      }
+    </div>
+
+    @if (isLoading()) {
+      <div class="recipes-grid">
+        @for (i of [1, 2, 3, 4, 5, 6]; track i) {
+          <div class="card-skeleton">
+            <div class="skeleton-img skeleton"></div>
+            <div class="skeleton-text skeleton h20 w70"></div>
+            <div class="skeleton-text skeleton h15 w50"></div>
+            <div class="skeleton-text skeleton h35 w100 mt20"></div>
+          </div>
+        }
+      </div>
+    } @else if (errorMessage()) {
+      <div class="error-container">
+        <div class="error-icon">⚠️</div>
+        <h3>¡Oops! Algo salió mal</h3>
+        <p>{{ errorMessage() }}</p>
+        <button class="btn btn-outline" (click)="search('Chicken')">Reintentar</button>
+      </div>
+    } @else if (recipes().length === 0) {
+      <div class="empty-container">
+        <div class="empty-icon">🥗</div>
+        <h3>No se encontraron recetas</h3>
+        <p>Intenta buscar con otros ingredientes o palabras clave.</p>
+      </div>
+    } @else {
+      <div class="recipes-grid">
+        @for (recipe of recipes(); track recipe.idMeal) {
+          <div class="recipe-card" (click)="viewDetails(recipe.idMeal)">
+            <div class="card-image-wrapper">
+              <img [src]="recipe.strMealThumb" [alt]="recipe.strMeal" loading="lazy" />
+              <div class="card-badges">
+                <span class="category-tag">{{ recipe.strCategory }}</span>
+              </div>
+            </div>
+            <div class="card-body">
+              <h3>{{ recipe.strMeal }}</h3>
+              <div class="card-meta">
+                <span class="meta-item"><span class="icon">🌍</span> {{ recipe.strArea }}</span>
+              </div>
+              <p class="card-excerpt">{{ recipe.strInstructions | slice:0:100 }}...</p>
+              <button class="btn-card-action">
+                Ver receta <span class="arrow">→</span>
+              </button>
+            </div>
+          </div>
+        }
+      </div>
+    }
+  </section>
+</div>

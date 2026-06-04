@@ -1,0 +1,138 @@
+import { Component, OnInit, signal, inject } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { ActivatedRoute, RouterModule, Router } from '@angular/router';
+import { RecipeService, Recipe } from '../../core/services/recipe.service';
+import { TranslationService } from '../../core/services/translation.service';
+import { forkJoin, map, Observable, of } from 'rxjs';
+
+@Component({
+  selector: 'app-details',
+  standalone: true,
+  imports: [CommonModule, RouterModule],
+  templateUrl: './details.component.html',
+  styleUrl: './details.component.css'
+})
+export class DetailsComponent implements OnInit {
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
+  private readonly recipeService = inject(RecipeService);
+  private readonly translationService = inject(TranslationService);
+
+  public readonly recipe = signal<Recipe | null>(null);
+  public readonly isLoading = signal(true);
+  public readonly isTranslating = signal(false);
+  public readonly isFavorite = signal(false);
+  public readonly errorMessage = signal<string | null>(null);
+
+  ngOnInit(): void {
+    const id = this.route.snapshot.paramMap.get('id');
+    if (id) {
+      this.loadRecipe(id);
+    } else {
+      this.router.navigate(['/home']);
+    }
+  }
+
+  loadRecipe(id: string): void {
+    this.isLoading.set(true);
+    this.recipeService.getRecipeById(id).subscribe({
+      next: recipe => {
+        if (!recipe) {
+          this.errorMessage.set('La receta solicitada no existe.');
+          this.isLoading.set(false);
+          return;
+        }
+
+        this.checkIfFavorite(recipe.idMeal);
+        this.recipe.set(recipe);
+        this.isLoading.set(false);
+
+        // Traducir los campos
+        this.isTranslating.set(true);
+        this.translateRecipe(recipe).subscribe({
+          next: translated => {
+            this.recipe.set(translated);
+            this.isTranslating.set(false);
+          },
+          error: () => {
+            this.isTranslating.set(false);
+          }
+        });
+      },
+      error: () => {
+        this.errorMessage.set('Error al conectar con la base de datos de recetas.');
+        this.isLoading.set(false);
+      }
+    });
+  }
+
+  translateRecipe(recipe: Recipe): Observable<Recipe> {
+    const ingredients$ = recipe.ingredients.length > 0
+      ? forkJoin(
+          recipe.ingredients.map(ing =>
+            this.translationService.translate(ing.name).pipe(
+              map(n => ({ name: n, measure: ing.measure }))
+            )
+          )
+        )
+      : of([]);
+
+    return forkJoin({
+      title:        this.translationService.translate(recipe.strMeal),
+      instructions: this.translationService.translate(recipe.strInstructions),
+      category:     this.translationService.translate(recipe.strCategory),
+      area:         this.translationService.translate(recipe.strArea),
+      ingredients:  ingredients$
+    }).pipe(
+      map(r => ({
+        ...recipe,
+        strMeal:         r.title,
+        strInstructions: r.instructions,
+        strCategory:     r.category,
+        strArea:         r.area,
+        ingredients:     r.ingredients
+      }))
+    );
+  }
+
+  checkIfFavorite(idMeal: string): void {
+    try {
+      const favsStr = localStorage.getItem('recetas_favorites');
+      if (favsStr) {
+        const favs: Recipe[] = JSON.parse(favsStr);
+        this.isFavorite.set(favs.some(r => r.idMeal === idMeal));
+      } else {
+        this.isFavorite.set(false);
+      }
+    } catch {
+      this.isFavorite.set(false);
+    }
+  }
+
+  toggleFavorite(): void {
+    const currentRecipe = this.recipe();
+    if (!currentRecipe) return;
+
+    try {
+      const favsStr = localStorage.getItem('recetas_favorites');
+      let favs: Recipe[] = favsStr ? JSON.parse(favsStr) : [];
+
+      if (this.isFavorite()) {
+        // Quitar de favoritos
+        favs = favs.filter(r => r.idMeal !== currentRecipe.idMeal);
+        this.isFavorite.set(false);
+      } else {
+        // Añadir a favoritos (guardando una versión limpia del objeto de la receta)
+        favs.push(currentRecipe);
+        this.isFavorite.set(true);
+      }
+      localStorage.setItem('recetas_favorites', JSON.stringify(favs));
+    } catch (e) {
+      console.error('Error al modificar favoritos:', e);
+    }
+  }
+
+  goBack(): void {
+    window.history.back();
+  }
+}

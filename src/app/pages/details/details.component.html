@@ -1,0 +1,81 @@
+<div class="details-page-container">
+  @if (isLoading()) {
+    <div class="loader-container">
+      <div class="coconut-loader">🥥</div>
+      <p>Cargando los secretos de esta receta...</p>
+    </div>
+  } @else if (errorMessage()) {
+    <div class="error-container">
+      <div class="error-icon">⚠️</div>
+      <h3>¡Oops! Algo salió mal</h3>
+      <p>{{ errorMessage() }}</p>
+      <button class="btn btn-primary" (click)="goBack()">Volver Atrás</button>
+    </div>
+  } @else if (recipe()) {
+    <!-- Volver -->
+    <div class="navigation-row">
+      <button class="btn-back" (click)="goBack()">
+        <span class="arrow">←</span> Volver
+      </button>
+    </div>
+
+    <div class="recipe-detail-grid">
+      <!-- Media Panel -->
+      <div class="recipe-media-panel">
+        <div class="image-wrapper">
+          <img [src]="recipe()?.strMealThumb" [alt]="recipe()?.strMeal" />
+          <button class="btn-favorite-toggle" [class.is-fav]="isFavorite()" (click)="toggleFavorite()">
+            <span class="star-icon">★</span> {{ isFavorite() ? 'Guardado' : 'Guardar en Favoritos' }}
+          </button>
+        </div>
+        <div class="recipe-main-info">
+          <h2>{{ recipe()?.strMeal }}</h2>
+          <div class="badges-row">
+            <span class="badge badge-primary"><span class="icon">📁</span> {{ recipe()?.strCategory }}</span>
+            <span class="badge badge-secondary"><span class="icon">🌍</span> {{ recipe()?.strArea }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Info Panel -->
+      <div class="recipe-info-panel">
+        @if (isTranslating()) {
+          <div class="translation-loader">
+            <span class="palm-icon">🌴</span>
+            <span>Traduciendo al español tradicional...</span>
+          </div>
+        }
+
+        <!-- Ingredients -->
+        <div class="info-section">
+          <h4 class="section-title"><span class="icon">🍍</span> Ingredientes Requeridos</h4>
+          <div class="ingredients-grid">
+            @for (item of recipe()?.ingredients; track item.name) {
+              <div class="ingredient-tag">
+                <span class="ing-name">{{ item.name }}</span>
+                <span class="ing-measure">{{ item.measure }}</span>
+              </div>
+            }
+          </div>
+        </div>
+
+        <!-- Preparation -->
+        <div class="info-section">
+          <h4 class="section-title"><span class="icon">🍳</span> Preparación Paso a Paso</h4>
+          <p class="instructions-text">{{ recipe()?.strInstructions }}</p>
+        </div>
+
+        <!-- YouTube Video -->
+        @if (recipe()?.strYoutube) {
+          <div class="info-section youtube-section">
+            <h4 class="section-title"><span class="icon">📺</span> Video Tutorial</h4>
+            <p class="video-desc">Mira el paso a paso detallado directamente en YouTube.</p>
+            <a [href]="recipe()?.strYoutube" target="_blank" class="btn btn-video">
+              Ver Tutorial en YouTube
+            </a>
+          </div>
+        }
+      </div>
+    </div>
+  }
+</div>

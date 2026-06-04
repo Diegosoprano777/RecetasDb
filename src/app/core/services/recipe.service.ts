@@ -70,4 +70,16 @@ export class RecipeService {
       })
     );
   }
+
+  /**
+   * Obtiene una receta específica por su ID.
+   */
+  getRecipeById(id: string): Observable<Recipe | null> {
+    return this.http.get<MealResponse>(`/lookup.php?i=${id}`).pipe(
+      map(response => {
+        if (!response.meals || response.meals.length === 0) return null;
+        return this.parseIngredients(response.meals[0]);
+      })
+    );
+  }
 }

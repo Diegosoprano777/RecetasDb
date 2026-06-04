@@ -1,8 +1,15 @@
 <header class="header">
-  <div class="header-brand">
+  <div class="header-brand" routerLink="/home" style="cursor: pointer;">
     <div class="logo-icon">🌴</div>
     <h1>Recetas<span>Caribes</span></h1>
   </div>
+
+  <nav class="header-nav">
+    <a routerLink="/home" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" class="nav-link">Inicio</a>
+    <a routerLink="/search" routerLinkActive="active" class="nav-link">Buscar</a>
+    <a routerLink="/favorites" routerLinkActive="active" class="nav-link">Favoritos</a>
+  </nav>
+
   <div class="header-status">
     <span class="status-badge pulse">
       <span class="status-dot"></span> API Conectada

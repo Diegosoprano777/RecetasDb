@@ -1,6 +1,7 @@
 import { Component, OnInit, signal, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { SlicePipe } from '@angular/common';
+import { RouterLink } from '@angular/router';
 import { RecipeService, Recipe } from '../../core/services/recipe.service';
 import { TranslationService } from '../../core/services/translation.service';
 import { forkJoin, map, Observable, of } from 'rxjs';
@@ -8,7 +9,7 @@ import { forkJoin, map, Observable, of } from 'rxjs';
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [FormsModule, SlicePipe],
+  imports: [FormsModule, SlicePipe, RouterLink],
   templateUrl: './home.component.html',
   styleUrl: './home.component.css'
 })
@@ -16,27 +17,14 @@ export class HomeComponent implements OnInit {
   private readonly recipeService = inject(RecipeService);
   private readonly translationService = inject(TranslationService);
 
-  public readonly searchQuery       = signal('');
   public readonly recipes          = signal<Recipe[]>([]);
   public readonly featuredRecipe   = signal<Recipe | null>(null);
-  public readonly selectedRecipe   = signal<Recipe | null>(null);
   public readonly isLoading        = signal(false);
   public readonly isFeaturedLoading = signal(false);
-  public readonly isTranslating    = signal(false);
-  public readonly errorMessage     = signal<string | null>(null);
-
-  public readonly searchChips = [
-    { label: 'Pollo',       value: 'Chicken'    },
-    { label: 'Carne',       value: 'Beef'       },
-    { label: 'Postres',     value: 'Dessert'    },
-    { label: 'Vegetariano', value: 'Vegetarian' },
-    { label: 'Mariscos',    value: 'Seafood'    },
-    { label: 'Pasta',       value: 'Pasta'      },
-  ];
 
   ngOnInit(): void {
     this.loadFeaturedRecipe();
-    this.search('Chicken');
+    this.loadRecommendedRecipes();
   }
 
   translateRecipe(recipe: Recipe): Observable<Recipe> {
@@ -91,35 +79,18 @@ export class HomeComponent implements OnInit {
     });
   }
 
-  search(query: string = this.searchQuery()): void {
-    this.searchQuery.set(query);
+  loadRecommendedRecipes(): void {
     this.isLoading.set(true);
-    this.errorMessage.set(null);
-
-    this.recipeService.searchRecipes(query).subscribe({
+    this.recipeService.searchRecipes('Dessert').subscribe({
       next: results => {
-        const translated = results.map(r => this.translateCardFields(r));
+        // Mostrar 3 recomendaciones
+        const translated = results.slice(0, 3).map(r => this.translateCardFields(r));
         this.recipes.set(translated);
         this.isLoading.set(false);
       },
       error: () => {
-        this.errorMessage.set('No se pudo establecer conexión con el servidor de recetas.');
         this.isLoading.set(false);
       }
     });
-  }
-
-  selectRecipe(recipe: Recipe): void {
-    this.selectedRecipe.set(recipe);
-    this.isTranslating.set(true);
-    this.translateRecipe(recipe).subscribe({
-      next:  t  => { this.selectedRecipe.set(t);  this.isTranslating.set(false); },
-      error: () => this.isTranslating.set(false)
-    });
-  }
-
-  closeModal(): void {
-    this.selectedRecipe.set(null);
-    this.isTranslating.set(false);
   }
 }
