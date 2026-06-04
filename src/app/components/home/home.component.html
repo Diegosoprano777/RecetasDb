@@ -1,0 +1,174 @@
+<!-- Hero: Receta del Día -->
+@if (featuredRecipe()) {
+  <section class="hero-section">
+    <div class="hero-card" [style.background-image]="'url(' + featuredRecipe()?.strMealThumb + ')'">
+      <div class="hero-overlay">
+        <div class="hero-content">
+          <span class="tag-featured">⭐ RECETA DEL DÍA</span>
+          <h2>{{ featuredRecipe()?.strMeal }}</h2>
+          <div class="recipe-meta-row">
+            <span class="meta-badge"><span class="icon">📁</span> {{ featuredRecipe()?.strCategory }}</span>
+            <span class="meta-badge"><span class="icon">🌍</span> {{ featuredRecipe()?.strArea }}</span>
+          </div>
+          <p class="hero-description">{{ featuredRecipe()?.strInstructions | slice:0:180 }}...</p>
+          <button class="btn btn-primary animate-btn" (click)="selectRecipe(featuredRecipe()!)">
+            <span class="icon">📖</span> Ver Receta Completa
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+} @else if (isFeaturedLoading()) {
+  <div class="hero-skeleton skeleton"></div>
+}
+
+<!-- Search & Filter Area -->
+<section class="search-section">
+  <div class="search-wrapper">
+    <div class="search-input-group">
+      <span class="search-icon">🔍</span>
+      <input 
+        type="text" 
+        placeholder="Buscar recetas por ingrediente o nombre... (ej: Chicken, Beef)" 
+        [ngModel]="searchQuery()" 
+        (ngModelChange)="searchQuery.set($event)"
+        (keyup.enter)="search()"
+      />
+      <button class="btn btn-search" (click)="search()">Buscar</button>
+    </div>
+  </div>
+
+  <!-- Category Chips -->
+  <div class="chips-container">
+    @for (chip of searchChips; track chip.value) {
+      <button 
+        class="chip" 
+        [class.active]="searchQuery().toLowerCase() === chip.value.toLowerCase()" 
+        (click)="search(chip.value)">
+        {{ chip.label }}
+      </button>
+    }
+  </div>
+</section>
+
+<!-- Results Section -->
+<section class="results-section">
+  <div class="results-header">
+    <h2>Explorar Recetas</h2>
+    @if (recipes().length > 0 && !isLoading()) {
+      <span class="results-count">{{ recipes().length }} encontradas</span>
+    }
+  </div>
+
+  @if (isLoading()) {
+    <div class="recipes-grid">
+      @for (i of [1, 2, 3, 4, 5, 6]; track i) {
+        <div class="card-skeleton">
+          <div class="skeleton-img skeleton"></div>
+          <div class="skeleton-text skeleton h20 w70"></div>
+          <div class="skeleton-text skeleton h15 w50"></div>
+          <div class="skeleton-text skeleton h35 w100 mt20"></div>
+        </div>
+      }
+    </div>
+  } @else if (errorMessage()) {
+    <div class="error-container">
+      <div class="error-icon">⚠️</div>
+      <h3>¡Oops! Algo salió mal</h3>
+      <p>{{ errorMessage() }}</p>
+      <button class="btn btn-outline" (click)="search('Chicken')">Reintentar</button>
+    </div>
+  } @else if (recipes().length === 0) {
+    <div class="empty-container">
+      <div class="empty-icon">🥗</div>
+      <h3>No se encontraron recetas</h3>
+      <p>Intenta buscar con otros ingredientes o palabras clave.</p>
+    </div>
+  } @else {
+    <div class="recipes-grid">
+      @for (recipe of recipes(); track recipe.idMeal) {
+        <div class="recipe-card" (click)="selectRecipe(recipe)">
+          <div class="card-image-wrapper">
+            <img [src]="recipe.strMealThumb" [alt]="recipe.strMeal" loading="lazy" />
+            <div class="card-badges">
+              <span class="category-tag">{{ recipe.strCategory }}</span>
+            </div>
+          </div>
+          <div class="card-body">
+            <h3>{{ recipe.strMeal }}</h3>
+            <div class="card-meta">
+              <span class="meta-item"><span class="icon">🌍</span> {{ recipe.strArea }}</span>
+            </div>
+            <p class="card-excerpt">{{ recipe.strInstructions | slice:0:100 }}...</p>
+            <button class="btn-card-action">
+              Ver receta <span class="arrow">→</span>
+            </button>
+          </div>
+        </div>
+      }
+    </div>
+  }
+</section>
+
+<!-- Recipe Details Modal -->
+@if (selectedRecipe()) {
+  <div class="modal-overlay" (click)="closeModal()">
+    <div class="modal-container" (click)="$event.stopPropagation()">
+      <button class="modal-close-btn" (click)="closeModal()">✕</button>
+      
+      <div class="modal-content-grid">
+        <!-- Left Panel: Image -->
+        <div class="modal-media-panel">
+          <img [src]="selectedRecipe()?.strMealThumb" [alt]="selectedRecipe()?.strMeal" />
+          <div class="modal-media-overlay">
+            <h2>{{ selectedRecipe()?.strMeal }}</h2>
+            <div class="badges-row">
+              <span class="badge badge-primary">{{ selectedRecipe()?.strCategory }}</span>
+              <span class="badge badge-secondary">{{ selectedRecipe()?.strArea }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Panel: Scrollable Info -->
+        <div class="modal-info-panel">
+          <!-- Translating Indicator -->
+          @if (isTranslating()) {
+            <div class="translation-loader">
+              <span class="palm-icon">🌴</span>
+              <span>Traduciendo preparación al español...</span>
+            </div>
+          }
+
+          <!-- Ingredients Section -->
+          <div class="info-section">
+            <h4 class="section-title"><span class="icon">🍍</span> Ingredientes</h4>
+            <div class="ingredients-grid">
+              @for (item of selectedRecipe()?.ingredients; track item.name) {
+                <div class="ingredient-tag">
+                  <span class="ing-name">{{ item.name }}</span>
+                  <span class="ing-measure">{{ item.measure }}</span>
+                </div>
+              }
+            </div>
+          </div>
+
+          <!-- Preparation Section -->
+          <div class="info-section">
+            <h4 class="section-title"><span class="icon">🍳</span> Preparación</h4>
+            <p class="instructions-text">{{ selectedRecipe()?.strInstructions }}</p>
+          </div>
+
+          <!-- YouTube Video Section -->
+          @if (selectedRecipe()?.strYoutube) {
+            <div class="info-section">
+              <h4 class="section-title"><span class="icon">📺</span> Video Tutorial</h4>
+              <a [href]="selectedRecipe()?.strYoutube" target="_blank" class="btn btn-video">
+                Ver en YouTube
+              </a>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+}
