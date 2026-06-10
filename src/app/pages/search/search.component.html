@@ -4,13 +4,22 @@
     <div class="search-wrapper">
       <div class="search-input-group">
         <span class="search-icon">🔍</span>
-        <input 
-          type="text" 
-          placeholder="Buscar recetas por ingrediente o nombre... (ej: Chicken, Beef)" 
-          [ngModel]="searchQuery()" 
-          (ngModelChange)="searchQuery.set($event)"
+        <!-- Binding reactivo: actualiza la Signal en tiempo real al escribir -->
+        <input
+          type="text"
+          placeholder="Buscar recetas en tiempo real... (ej: Chicken, Beef)"
+          [value]="searchQuery()"
+          (input)="searchQuery.set($any($event.target).value)"
           (keyup.enter)="search()"
         />
+        <!-- Spinner en tiempo real dentro del input -->
+        @if (isLoading()) {
+          <div class="input-spinner"></div>
+        }
+        <!-- Botón limpiar -->
+        @if (searchQuery().length > 0 && !isLoading()) {
+          <button class="btn-clear" (click)="searchQuery.set('')" aria-label="Limpiar">✕</button>
+        }
         <button class="btn btn-search" (click)="search()">Buscar</button>
       </div>
     </div>
@@ -18,23 +27,28 @@
     <!-- Category Chips -->
     <div class="chips-container">
       @for (chip of searchChips; track chip.value) {
-        <button 
-          class="chip" 
-          [class.active]="searchQuery().toLowerCase() === chip.value.toLowerCase()" 
+        <button
+          class="chip"
+          [class.active]="searchQuery().toLowerCase() === chip.value.toLowerCase()"
           (click)="search(chip.value)">
           {{ chip.label }}
         </button>
       }
     </div>
+
+    <!-- Contador en tiempo real -->
+    @if (!isLoading() && recipes().length > 0) {
+      <p class="live-count">
+        <span class="count-badge">{{ recipes().length }}</span> recetas encontradas para
+        <strong>"{{ searchQuery() }}"</strong>
+      </p>
+    }
   </section>
 
   <!-- Results Section -->
   <section class="results-section">
     <div class="results-header">
       <h2>Explorar Recetas</h2>
-      @if (recipes().length > 0 && !isLoading()) {
-        <span class="results-count">{{ recipes().length }} encontradas</span>
-      }
     </div>
 
     @if (isLoading()) {
@@ -55,11 +69,12 @@
         <p>{{ errorMessage() }}</p>
         <button class="btn btn-outline" (click)="search('Chicken')">Reintentar</button>
       </div>
-    } @else if (recipes().length === 0) {
+    } @else if (isEmpty()) {
+      <!-- Estado vacío usando Signal computed isEmpty() -->
       <div class="empty-container">
         <div class="empty-icon">🥗</div>
         <h3>No se encontraron recetas</h3>
-        <p>Intenta buscar con otros ingredientes o palabras clave.</p>
+        <p>No hay resultados para <strong>"{{ searchQuery() }}"</strong>.<br>Intenta con otro ingrediente o nombre.</p>
       </div>
     } @else {
       <div class="recipes-grid">
