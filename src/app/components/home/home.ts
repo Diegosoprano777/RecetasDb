@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, inject } from '@angular/core';
+﻿import { Component, OnInit, signal, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { SlicePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
@@ -10,10 +10,10 @@ import { forkJoin, map, Observable, of } from 'rxjs';
   selector: 'app-home',
   standalone: true,
   imports: [FormsModule, SlicePipe, RouterLink],
-  templateUrl: './home.component.html',
-  styleUrl: './home.component.css'
+  templateUrl: './home.html',
+  styleUrl: './home.css'
 })
-export class HomeComponent implements OnInit {
+export class Home implements OnInit {
   private readonly recipeService = inject(RecipeService);
   private readonly translationService = inject(TranslationService);
 
@@ -100,3 +100,5 @@ export class HomeComponent implements OnInit {
     });
   }
 }
+
+

@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, inject } from '@angular/core';
+﻿import { Component, OnInit, signal, inject } from '@angular/core';
 import { CommonModule, SlicePipe } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { Recipe } from '../../core/services/recipe.service';
@@ -7,10 +7,10 @@ import { Recipe } from '../../core/services/recipe.service';
   selector: 'app-favorites',
   standalone: true,
   imports: [CommonModule, SlicePipe, RouterModule],
-  templateUrl: './favorites.component.html',
-  styleUrl: './favorites.component.css'
+  templateUrl: './favorites.html',
+  styleUrl: './favorites.css'
 })
-export class FavoritesComponent implements OnInit {
+export class Favorites implements OnInit {
   private readonly router = inject(Router);
   public readonly favorites = signal<Recipe[]>([]);
 
@@ -44,3 +44,5 @@ export class FavoritesComponent implements OnInit {
     this.router.navigate(['/details', recipeId]);
   }
 }
+
+

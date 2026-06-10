@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, inject, effect, computed } from '@angular/core';
+﻿import { Component, OnInit, signal, inject, effect, computed } from '@angular/core';
 import { CommonModule, SlicePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
@@ -9,10 +9,10 @@ import { TranslationService } from '../../core/services/translation.service';
   selector: 'app-search',
   standalone: true,
   imports: [CommonModule, SlicePipe, FormsModule, RouterModule],
-  templateUrl: './search.component.html',
-  styleUrl: './search.component.css'
+  templateUrl: './search.html',
+  styleUrl: './search.css'
 })
-export class SearchComponent implements OnInit {
+export class Search implements OnInit {
   private readonly recipeService    = inject(RecipeService);
   private readonly translationService = inject(TranslationService);
   private readonly router           = inject(Router);
@@ -102,3 +102,5 @@ export class SearchComponent implements OnInit {
     this.router.navigate(['/details', recipeId]);
   }
 }
+
+

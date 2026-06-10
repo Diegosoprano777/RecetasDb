@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, inject } from '@angular/core';
+﻿import { Component, OnInit, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterModule, Router } from '@angular/router';
 import { RecipeService, Recipe } from '../../core/services/recipe.service';
@@ -9,10 +9,10 @@ import { forkJoin, map, Observable, of } from 'rxjs';
   selector: 'app-details',
   standalone: true,
   imports: [CommonModule, RouterModule],
-  templateUrl: './details.component.html',
-  styleUrl: './details.component.css'
+  templateUrl: './details.html',
+  styleUrl: './details.css'
 })
-export class DetailsComponent implements OnInit {
+export class Details implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly recipeService = inject(RecipeService);
@@ -136,3 +136,5 @@ export class DetailsComponent implements OnInit {
     window.history.back();
   }
 }
+
+
