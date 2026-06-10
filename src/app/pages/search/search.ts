@@ -1,9 +1,10 @@
-﻿import { Component, OnInit, signal, inject, effect, computed } from '@angular/core';
+import { Component, OnInit, signal, inject, effect, computed } from '@angular/core';
 import { CommonModule, SlicePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { RecipeService, Recipe } from '../../core/services/recipe.service';
 import { TranslationService } from '../../core/services/translation.service';
+import { forkJoin, map, of, switchMap } from 'rxjs';
 
 @Component({
   selector: 'app-search',
@@ -13,9 +14,9 @@ import { TranslationService } from '../../core/services/translation.service';
   styleUrl: './search.css'
 })
 export class Search implements OnInit {
-  private readonly recipeService    = inject(RecipeService);
+  private readonly recipeService     = inject(RecipeService);
   private readonly translationService = inject(TranslationService);
-  private readonly router           = inject(Router);
+  private readonly router            = inject(Router);
 
   // ── Signals de estado ─────────────────────────────────────────────────────
   public readonly searchQuery  = signal('');
@@ -39,12 +40,10 @@ export class Search implements OnInit {
   ];
 
   constructor() {
-    // ── Día 5: effect() con debounce de 350ms ─────────────────────────────
-    // Reacciona automáticamente cada vez que searchQuery cambia
+    // ── Día 5: effect() con debounce 350ms ────────────────────────────────
     effect((onCleanup) => {
       const query = this.searchQuery().trim();
 
-      // Si el campo está vacío, limpiamos sin buscar
       if (query.length === 0) {
         this.recipes.set([]);
         this.hasSearched.set(false);
@@ -52,17 +51,20 @@ export class Search implements OnInit {
         return;
       }
 
-      // Si tiene menos de 2 caracteres, esperamos
       if (query.length < 2) return;
 
       this.isLoading.set(true);
       this.errorMessage.set(null);
 
-      // Debounce: esperamos 350ms antes de disparar la petición
       const timer = setTimeout(() => {
-        this.recipeService.searchRecipes(query).subscribe({
-          next: results => {
-            const translated = results.map(r => this.translateCardFields(r));
+        this.recipeService.searchRecipes(query).pipe(
+          // Traducir todas las tarjetas (título + excerpt + categoría + área)
+          switchMap(results => {
+            if (results.length === 0) return of([]);
+            return forkJoin(results.map(r => this.translateCard(r)));
+          })
+        ).subscribe({
+          next: translated => {
             this.recipes.set(translated);
             this.isLoading.set(false);
             this.hasSearched.set(true);
@@ -75,7 +77,6 @@ export class Search implements OnInit {
         });
       }, 350);
 
-      // Limpieza: cancela el timer si el usuario sigue escribiendo
       onCleanup(() => clearTimeout(timer));
     });
   }
@@ -84,13 +85,23 @@ export class Search implements OnInit {
     this.search('Chicken'); // Búsqueda inicial por defecto
   }
 
-  private translateCardFields(recipe: Recipe): Recipe {
-    return {
-      ...recipe,
-      strMeal:     this.translationService.translateInstant(recipe.strMeal),
-      strCategory: this.translationService.translateInstant(recipe.strCategory),
-      strArea:     this.translationService.translateInstant(recipe.strArea),
-    };
+  // ── Traduce los campos visibles en la tarjeta vía API ────────────────────
+  private translateCard(recipe: Recipe) {
+    const excerptEN = recipe.strInstructions?.slice(0, 180) ?? '';
+    return forkJoin({
+      title:    this.translationService.translate(recipe.strMeal),
+      excerpt:  this.translationService.translate(excerptEN),
+      category: this.translationService.translate(recipe.strCategory),
+      area:     this.translationService.translate(recipe.strArea),
+    }).pipe(
+      map(r => ({
+        ...recipe,
+        strMeal:         r.title,
+        strInstructions: r.excerpt,
+        strCategory:     r.category,
+        strArea:         r.area,
+      }))
+    );
   }
 
   /** Búsqueda manual (chips o Enter) */
@@ -102,5 +113,3 @@ export class Search implements OnInit {
     this.router.navigate(['/details', recipeId]);
   }
 }
-
-

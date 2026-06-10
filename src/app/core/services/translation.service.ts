@@ -282,22 +282,21 @@ export class TranslationService {
     if (!text) return text;
     const trimmed = text.trim();
 
-    // 1. Lookup exacto
+    // 1. Lookup exacto de la frase completa
     if (this.DICTIONARY[trimmed]) return this.DICTIONARY[trimmed];
 
-    // 2. Traducción palabra a palabra para títulos compuestos
+    // 2. Separar por espacios reales, traducir cada palabra y REUNIR CON ESPACIO
     const translated = trimmed
-      .split(/(\s+|&)/)
+      .split(/\s+/)
       .map(token => {
-        const t = token.trim();
-        if (!t || t === '&') return t;
-        // Intentar lookup de la palabra (case-insensitive)
+        if (!token) return token;
+        // Lookup case-insensitive
         const entry = Object.keys(this.DICTIONARY).find(
-          k => k.toLowerCase() === t.toLowerCase()
+          k => k.toLowerCase() === token.toLowerCase()
         );
-        return entry ? this.DICTIONARY[entry] : t;
+        return entry ? this.DICTIONARY[entry] : token;
       })
-      .join('');
+      .join(' ');  // <-- ESPACIO para "Pollo Handi" no "PolloHandi"
 
     return translated;
   }

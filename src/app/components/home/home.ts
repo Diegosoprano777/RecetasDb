@@ -1,10 +1,10 @@
-﻿import { Component, OnInit, signal, inject } from '@angular/core';
+import { Component, OnInit, signal, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { SlicePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { RecipeService, Recipe } from '../../core/services/recipe.service';
 import { TranslationService } from '../../core/services/translation.service';
-import { forkJoin, map, Observable, of } from 'rxjs';
+import { forkJoin, map, Observable, of, switchMap } from 'rxjs';
 
 @Component({
   selector: 'app-home',
@@ -14,12 +14,12 @@ import { forkJoin, map, Observable, of } from 'rxjs';
   styleUrl: './home.css'
 })
 export class Home implements OnInit {
-  private readonly recipeService = inject(RecipeService);
+  private readonly recipeService     = inject(RecipeService);
   private readonly translationService = inject(TranslationService);
 
-  public readonly recipes          = signal<Recipe[]>([]);
-  public readonly featuredRecipe   = signal<Recipe | null>(null);
-  public readonly isLoading        = signal(false);
+  public readonly recipes           = signal<Recipe[]>([]);
+  public readonly featuredRecipe    = signal<Recipe | null>(null);
+  public readonly isLoading         = signal(false);
   public readonly isFeaturedLoading = signal(false);
 
   ngOnInit(): void {
@@ -27,6 +27,7 @@ export class Home implements OnInit {
     this.loadRecommendedRecipes();
   }
 
+  // ── Traducción COMPLETA (para hero y detalles) ────────────────────────────
   translateRecipe(recipe: Recipe): Observable<Recipe> {
     const ingredients$ = recipe.ingredients.length > 0
       ? forkJoin(
@@ -56,13 +57,23 @@ export class Home implements OnInit {
     );
   }
 
-  private translateCardFields(recipe: Recipe): Recipe {
-    return {
-      ...recipe,
-      strMeal:     this.translationService.translateInstant(recipe.strMeal),
-      strCategory: this.translationService.translateInstant(recipe.strCategory),
-      strArea:     this.translationService.translateInstant(recipe.strArea),
-    };
+  // ── Traducción de TARJETA (título + excerpt de instrucciones) ─────────────
+  private translateCard(recipe: Recipe): Observable<Recipe> {
+    const excerptEN = recipe.strInstructions?.slice(0, 180) ?? '';
+    return forkJoin({
+      title:    this.translationService.translate(recipe.strMeal),
+      excerpt:  this.translationService.translate(excerptEN),
+      category: this.translationService.translate(recipe.strCategory),
+      area:     this.translationService.translate(recipe.strArea),
+    }).pipe(
+      map(r => ({
+        ...recipe,
+        strMeal:         r.title,
+        strInstructions: r.excerpt,
+        strCategory:     r.category,
+        strArea:         r.area,
+      }))
+    );
   }
 
   loadFeaturedRecipe(): void {
@@ -71,8 +82,8 @@ export class Home implements OnInit {
       next: recipe => {
         if (!recipe) { this.isFeaturedLoading.set(false); return; }
         this.translateRecipe(recipe).subscribe({
-          next:  t   => { this.featuredRecipe.set(t);      this.isFeaturedLoading.set(false); },
-          error: ()  => { this.featuredRecipe.set(recipe); this.isFeaturedLoading.set(false); }
+          next:  t  => { this.featuredRecipe.set(t);      this.isFeaturedLoading.set(false); },
+          error: () => { this.featuredRecipe.set(recipe); this.isFeaturedLoading.set(false); }
         });
       },
       error: () => this.isFeaturedLoading.set(false)
@@ -81,24 +92,23 @@ export class Home implements OnInit {
 
   loadRecommendedRecipes(): void {
     this.isLoading.set(true);
-    // Cargamos 3 recetas aleatorias en paralelo
     forkJoin([
       this.recipeService.getRandomRecipe(),
       this.recipeService.getRandomRecipe(),
       this.recipeService.getRandomRecipe(),
-    ]).subscribe({
-      next: results => {
-        const validRecipes = results
-          .filter((r): r is Recipe => r !== null)
-          .map(r => this.translateCardFields(r));
-        this.recipes.set(validRecipes);
+    ]).pipe(
+      switchMap(results => {
+        const valid = results.filter((r): r is Recipe => r !== null);
+        if (valid.length === 0) return of([]);
+        // Traducción completa de título + excerpt + categoría + área
+        return forkJoin(valid.map(r => this.translateCard(r)));
+      })
+    ).subscribe({
+      next: translated => {
+        this.recipes.set(translated);
         this.isLoading.set(false);
       },
-      error: () => {
-        this.isLoading.set(false);
-      }
+      error: () => this.isLoading.set(false)
     });
   }
 }
-
-
