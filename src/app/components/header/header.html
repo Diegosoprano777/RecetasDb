@@ -5,13 +5,23 @@
   </div>
 
   <nav class="header-nav">
-    <a routerLink="/home" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" class="nav-link">Inicio</a>
-    <a routerLink="/search" routerLinkActive="active" class="nav-link">Buscar</a>
-    <a routerLink="/favorites" routerLinkActive="active" class="nav-link">Favoritos</a>
+    <a routerLink="/home" routerLinkActive="active"
+       [routerLinkActiveOptions]="{exact: true}" class="nav-link">
+      🏠 Inicio
+    </a>
+    <a routerLink="/search" routerLinkActive="active" class="nav-link">
+      🔍 Buscar
+    </a>
+    <a routerLink="/favorites" routerLinkActive="active" class="nav-link nav-link-fav">
+      ❤️ Favoritos
+      @if (favService.count() > 0) {
+        <span class="fav-badge">{{ favService.count() }}</span>
+      }
+    </a>
   </nav>
 
   <div class="header-status">
-    <span class="status-badge pulse">
+    <span class="status-badge">
       <span class="status-dot"></span> API Conectada
     </span>
   </div>

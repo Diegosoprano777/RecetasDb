@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterModule, Router } from '@angular/router';
 import { RecipeService, Recipe } from '../../core/services/recipe.service';
 import { TranslationService } from '../../core/services/translation.service';
+import { FavoritesService } from '../../core/services/favorites.service';
 import { forkJoin, map, Observable, of } from 'rxjs';
 
 @Component({
@@ -18,23 +19,20 @@ export class Details implements OnInit {
   private readonly router             = inject(Router);
   private readonly recipeService      = inject(RecipeService);
   private readonly translationService = inject(TranslationService);
+  public  readonly favService         = inject(FavoritesService);
 
   public readonly recipe        = signal<Recipe | null>(null);
   public readonly isLoading     = signal(true);
   public readonly isTranslating = signal(false);
-  public readonly isFavorite    = signal(false);
   public readonly errorMessage  = signal<string | null>(null);
 
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id');
-    if (id) {
-      this.loadRecipe(id);
-    } else {
-      this.router.navigate(['/home']);
-    }
+    if (id) this.loadRecipe(id);
+    else     this.router.navigate(['/home']);
   }
 
-  // ── Carga y traducción de la receta ───────────────────────────────────────
+  // ── Carga y traducción ────────────────────────────────────────────────────
   loadRecipe(id: string): void {
     this.isLoading.set(true);
     this.recipeService.getRecipeById(id).subscribe({
@@ -44,19 +42,18 @@ export class Details implements OnInit {
           this.isLoading.set(false);
           return;
         }
-        this.checkIfFavorite(recipe.idMeal);
         this.recipe.set(recipe);
         this.isLoading.set(false);
 
         // Traducir en segundo plano
         this.isTranslating.set(true);
         this.translateRecipe(recipe).subscribe({
-          next:  translated => { this.recipe.set(translated); this.isTranslating.set(false); },
-          error: ()         => { this.isTranslating.set(false); }
+          next:  t  => { this.recipe.set(t);      this.isTranslating.set(false); },
+          error: () => { this.isTranslating.set(false); }
         });
       },
       error: () => {
-        this.errorMessage.set('Error al conectar con la base de datos de recetas.');
+        this.errorMessage.set('Error al conectar con la base de datos de recetas. Verifica tu conexión.');
         this.isLoading.set(false);
       }
     });
@@ -64,13 +61,11 @@ export class Details implements OnInit {
 
   translateRecipe(recipe: Recipe): Observable<Recipe> {
     const ingredients$ = recipe.ingredients.length > 0
-      ? forkJoin(
-          recipe.ingredients.map(ing =>
-            this.translationService.translate(ing.name).pipe(
-              map(n => ({ name: n, measure: ing.measure }))
-            )
+      ? forkJoin(recipe.ingredients.map(ing =>
+          this.translationService.translate(ing.name).pipe(
+            map(n => ({ name: n, measure: ing.measure }))
           )
-        )
+        ))
       : of([]);
 
     return forkJoin({
@@ -82,64 +77,34 @@ export class Details implements OnInit {
     }).pipe(
       map(r => ({
         ...recipe,
-        strMeal:         r.title,
-        strInstructions: r.instructions,
-        strCategory:     r.category,
-        strArea:         r.area,
-        ingredients:     r.ingredients
+        strMeal: r.title, strInstructions: r.instructions,
+        strCategory: r.category, strArea: r.area, ingredients: r.ingredients
       }))
     );
   }
 
   /**
-   * Divide las instrucciones en pasos individuales para mostrarlos numerados.
-   * Separa por saltos de línea dobles o por punto seguido de mayúscula.
+   * Divide instrucciones en pasos numerados para renderizar.
    */
   getSteps(): string[] {
     const instructions = this.recipe()?.strInstructions;
     if (!instructions) return [];
     return instructions
-      .split(/\r\n\r\n|\n\n/)           // Párrafos dobles primero
-      .flatMap(p => p.split(/\.\s+(?=[A-ZÁÉÍÓÚÑ])/))  // Luego oraciones
+      .split(/\r\n\r\n|\n\n/)
+      .flatMap(p => p.split(/\.\s+(?=[A-ZÁÉÍÓÚÑ])/))
       .map(s => s.trim())
-      .filter(s => s.length > 10);      // Filtrar pasos vacíos o muy cortos
+      .filter(s => s.length > 10);
   }
 
-  // ── Favoritos ─────────────────────────────────────────────────────────────
-  checkIfFavorite(idMeal: string): void {
-    try {
-      const favsStr = localStorage.getItem('recetas_favorites');
-      if (favsStr) {
-        const favs: Recipe[] = JSON.parse(favsStr);
-        this.isFavorite.set(favs.some(r => r.idMeal === idMeal));
-      } else {
-        this.isFavorite.set(false);
-      }
-    } catch {
-      this.isFavorite.set(false);
-    }
-  }
-
+  // ── Favoritos (delegado al servicio) ──────────────────────────────────────
   toggleFavorite(): void {
-    const currentRecipe = this.recipe();
-    if (!currentRecipe) return;
-    try {
-      const favsStr = localStorage.getItem('recetas_favorites');
-      let favs: Recipe[] = favsStr ? JSON.parse(favsStr) : [];
-      if (this.isFavorite()) {
-        favs = favs.filter(r => r.idMeal !== currentRecipe.idMeal);
-        this.isFavorite.set(false);
-      } else {
-        favs.push(currentRecipe);
-        this.isFavorite.set(true);
-      }
-      localStorage.setItem('recetas_favorites', JSON.stringify(favs));
-    } catch (e) {
-      console.error('Error al modificar favoritos:', e);
-    }
+    const r = this.recipe();
+    if (r) this.favService.toggle(r);
   }
 
-  goBack(): void {
-    window.history.back();
+  isFavorite(): boolean {
+    return this.favService.isFavorite(this.recipe()?.idMeal ?? '');
   }
+
+  goBack(): void { window.history.back(); }
 }

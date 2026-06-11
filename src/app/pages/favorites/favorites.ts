@@ -1,6 +1,7 @@
-﻿import { Component, OnInit, signal, inject, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, signal, inject, computed, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule, SlicePipe } from '@angular/common';
-import { Router, RouterModule } from '@angular/router';
+import { RouterModule } from '@angular/router';
+import { FavoritesService } from '../../core/services/favorites.service';
 import { Recipe } from '../../core/services/recipe.service';
 
 @Component({
@@ -11,39 +12,18 @@ import { Recipe } from '../../core/services/recipe.service';
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './favorites.css'
 })
-export class Favorites implements OnInit {
-  private readonly router = inject(Router);
-  public readonly favorites = signal<Recipe[]>([]);
+export class Favorites {
+  public readonly favService = inject(FavoritesService);
 
-  ngOnInit(): void {
-    this.loadFavorites();
-  }
-
-  loadFavorites(): void {
-    try {
-      const data = localStorage.getItem('recetas_favorites');
-      if (data) {
-        this.favorites.set(JSON.parse(data));
-      } else {
-        this.favorites.set([]);
-      }
-    } catch (e) {
-      console.error('Error al cargar favoritos de localStorage:', e);
-      this.favorites.set([]);
-    }
-  }
+  // Computed para conteo de favoritos
+  public readonly count = this.favService.count;
 
   removeFavorite(recipeId: string, event: Event): void {
-    event.stopPropagation(); // Evitar navegar al hacer clic en quitar
-    const currentFavs = this.favorites();
-    const updatedFavs = currentFavs.filter(r => r.idMeal !== recipeId);
-    this.favorites.set(updatedFavs);
-    localStorage.setItem('recetas_favorites', JSON.stringify(updatedFavs));
+    event.stopPropagation();
+    this.favService.remove(recipeId);
   }
 
-  viewDetails(recipeId: string): void {
-    this.router.navigate(['/details', recipeId]);
+  clearAll(): void {
+    this.favService.clear();
   }
 }
-
-

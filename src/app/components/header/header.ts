@@ -1,5 +1,6 @@
-﻿import { Component, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
+import { FavoritesService } from '../../core/services/favorites.service';
 
 @Component({
   selector: 'app-header',
@@ -9,6 +10,6 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './header.css'
 })
-export class Header {}
-
-
+export class Header {
+  public readonly favService = inject(FavoritesService);
+}

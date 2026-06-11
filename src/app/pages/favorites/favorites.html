@@ -1,33 +1,57 @@
 <div class="favorites-page-container">
+
+  <!-- Header de la página -->
   <div class="favorites-header">
-    <h2>Mis Recetas Favoritas</h2>
-    <p class="subtitle">Guarda tus delicias caribeñas preferidas para verlas cuando quieras.</p>
+    <div class="header-left">
+      <h2>❤️ Mis Recetas Favoritas</h2>
+      <p class="subtitle">Guarda tus delicias caribeñas preferidas para verlas cuando quieras.</p>
+    </div>
+    @if (favService.count() > 0) {
+      <div class="header-right">
+        <span class="count-badge">{{ favService.count() }} guardadas</span>
+        <button class="btn-clear" (click)="clearAll()" title="Limpiar todos los favoritos">
+          🗑️ Limpiar todo
+        </button>
+      </div>
+    }
   </div>
 
-  @if (favorites().length === 0) {
+  <!-- Estado vacío -->
+  @if (favService.favorites().length === 0) {
     <div class="empty-container">
-      <div class="empty-icon">🥥</div>
+      <div class="empty-illustration">
+        <span class="empty-icon">🥥</span>
+        <div class="empty-waves">🌊</div>
+      </div>
       <h3>Aún no tienes favoritos</h3>
-      <p>Explora nuestras recetas y guarda tus preferidas pulsando el botón de estrella en su detalle.</p>
-      <button class="btn btn-primary" routerLink="/search">Explorar Recetas</button>
+      <p>Explora nuestras recetas y guarda tus preferidas pulsando el botón<br><strong>★ Guardar en Favoritos</strong> en la página de detalle.</p>
+      <a routerLink="/search" class="btn btn-primary">🔍 Explorar Recetas</a>
     </div>
+
   } @else {
+    <!-- Grid de favoritos -->
     <div class="recipes-grid">
-      @for (recipe of favorites(); track recipe.idMeal) {
-        <div class="recipe-card" (click)="viewDetails(recipe.idMeal)">
+      @for (recipe of favService.favorites(); track recipe.idMeal) {
+        <div class="recipe-card" [routerLink]="['/details', recipe.idMeal]">
+
+          <!-- Imagen con botón de eliminar -->
           <div class="card-image-wrapper">
             <img [src]="recipe.strMealThumb" [alt]="recipe.strMeal" loading="lazy" />
             <div class="card-badges">
               <span class="category-tag">{{ recipe.strCategory }}</span>
             </div>
-            <button class="btn-remove-fav" (click)="removeFavorite(recipe.idMeal, $event)" title="Quitar de favoritos">
-              ✕
-            </button>
+            <button
+              class="btn-remove-fav"
+              (click)="removeFavorite(recipe.idMeal, $event)"
+              title="Quitar de favoritos"
+            >✕</button>
           </div>
+
+          <!-- Cuerpo de la tarjeta -->
           <div class="card-body">
             <h3>{{ recipe.strMeal }}</h3>
             <div class="card-meta">
-              <span class="meta-item"><span class="icon">🌍</span> {{ recipe.strArea }}</span>
+              <span class="meta-item"><span class="icon">🌍</span> {{ recipe.strArea || 'Internacional' }}</span>
             </div>
             <p class="card-excerpt">{{ recipe.strInstructions | slice:0:100 }}...</p>
             <button class="btn-card-action">

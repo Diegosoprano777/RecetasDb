@@ -1,44 +1,147 @@
-/* Importar fuentes Google Fonts: Playfair Display (titulares elegantes y tradicionales) y Quicksand (texto redondeado y cálido) */
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Quicksand:wght@300..700&display=swap');
+/* ═══════════════════════════════════════════════════════════════════
+   RecetasDB — Global Styles  (Día 8: Dark Mode, Tipografía, UX)
+   ═══════════════════════════════════════════════════════════════════ */
 
-/* Resets Globales Caribeños Tradicionales */
-html, body {
-  margin: 0;
-  padding: 0;
-  width: 100%;
-  height: 100%;
-  background-color: #FAF6F0; /* Color arena de playa cálida */
-  color: #2E2214; /* Cacao / Madera oscura */
-  overflow-x: hidden;
-  font-family: 'Quicksand', sans-serif;
+/* Google Fonts Premium */
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Quicksand:wght@400;500;600;700&display=swap');
+
+/* ── Reset y base ─────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html {
   scroll-behavior: smooth;
+  font-size: 16px;
 }
 
-*, *::before, *::after {
-  box-sizing: border-box;
+body {
+  font-family: 'Quicksand', system-ui, sans-serif;
+  background-color: #FAF6F0;
+  color: #2E2214;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
 }
 
-/* Títulos con fuente Serif tradicional */
-h1, h2, h3, h4, .font-serif {
+h1, h2, h3, h4, h5 {
   font-family: 'Playfair Display', Georgia, serif;
+  line-height: 1.3;
 }
 
-/* Personalización del Scrollbar en tonos caribeños */
-::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
+/* ── Scrollbar caribeña ────────────────────────────────────────────── */
+::-webkit-scrollbar       { width: 8px; }
+::-webkit-scrollbar-track { background: #FAF6F0; }
+::-webkit-scrollbar-thumb { background: #E6D8C8; border-radius: 8px; }
+::-webkit-scrollbar-thumb:hover { background: #F26430; }
+
+/* ── Skeleton Loaders (Día 8) ──────────────────────────────────────── */
+.skeleton {
+  background: linear-gradient(90deg, #f0ebe3 25%, #faf6f0 50%, #f0ebe3 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 10px;
 }
 
-::-webkit-scrollbar-track {
-  background: #FAF6F0;
+@keyframes shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
 }
 
-::-webkit-scrollbar-thumb {
-  background: #E0CEB8; /* Rattan claro / Madera */
-  border-radius: 6px;
-  border: 3px solid #FAF6F0;
+/* Skeleton específico para tarjetas de receta */
+.card-skeleton {
+  background: #fff;
+  border: 1px solid #E6D8C8;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 4px 15px rgba(46, 34, 20, 0.05);
+}
+.skeleton-img   { width: 100%; aspect-ratio: 4/3; border-radius: 0; }
+.skeleton-body  { padding: 1.1rem; display: flex; flex-direction: column; gap: 0.6rem; }
+.skeleton-title { height: 20px; width: 75%; }
+.skeleton-meta  { height: 14px; width: 50%; }
+.skeleton-text  { height: 14px; width: 90%; }
+.skeleton-text.short { width: 60%; }
+.skeleton-btn   { height: 36px; width: 45%; margin-top: 0.5rem; border-radius: 10px; }
+
+/* Skeleton para el hero */
+.hero-skeleton {
+  height: 420px;
+  border-radius: 30px;
+  margin-bottom: 3rem;
 }
 
-::-webkit-scrollbar-thumb:hover {
-  background: #F26430; /* Papaya atardecer en hover */
+/* ── Toast / Notificaciones ─────────────────────────────────────────── */
+@keyframes slideInRight {
+  from { transform: translateX(110%); opacity: 0; }
+  to   { transform: translateX(0);    opacity: 1; }
+}
+@keyframes fadeOutRight {
+  from { transform: translateX(0);    opacity: 1; }
+  to   { transform: translateX(110%); opacity: 0; }
+}
+
+/* ── Animaciones de página (route transitions) ─────────────────────── */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Aplicar a todos los contenedores de página */
+.details-page-container,
+.search-page-container,
+.favorites-page-container,
+.not-found-container {
+  animation: fadeInUp 0.35s ease forwards;
+}
+
+/* ── Micro-animaciones globales ─────────────────────────────────────── */
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.6; }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── Dark Mode ─────────────────────────────────────────────────────── */
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+  }
+
+  body {
+    background-color: #1a1208;
+    color: #F5ECD8;
+  }
+
+  /* Variables de color en dark */
+  app-root {
+    --bg-sand:           #1a1208;
+    --bg-card:           #2a1f10;
+    --text-dark:         #F5ECD8;
+    --text-muted:        #B8A898;
+    --border-warm:       #3d2e1a;
+    --shadow-warm:       0 10px 25px rgba(0, 0, 0, 0.3);
+    --shadow-hover:      0 15px 35px rgba(242, 100, 48, 0.25);
+    --color-papaya-light:#3d1c0a;
+    --color-turquoise-light: #0a2a30;
+    --color-palm-light:  #0a2010;
+  }
+
+  /* Skeleton en dark */
+  .skeleton {
+    background: linear-gradient(90deg, #2a1f10 25%, #3d2e1a 50%, #2a1f10 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+  }
+  .card-skeleton { background: #2a1f10; border-color: #3d2e1a; }
+
+  /* Scrollbar dark */
+  ::-webkit-scrollbar-track { background: #1a1208; }
+  ::-webkit-scrollbar-thumb { background: #3d2e1a; }
+  ::-webkit-scrollbar-thumb:hover { background: #F26430; }
+}
+
+/* ── Responsive helpers ─────────────────────────────────────────────── */
+@media (max-width: 480px) {
+  html { font-size: 14px; }
 }
