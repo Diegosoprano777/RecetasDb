@@ -1,4 +1,4 @@
-﻿import { Component, OnInit, signal, inject, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, signal, inject, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterModule, Router } from '@angular/router';
 import { RecipeService, Recipe } from '../../core/services/recipe.service';
@@ -14,16 +14,16 @@ import { forkJoin, map, Observable, of } from 'rxjs';
   styleUrl: './details.css'
 })
 export class Details implements OnInit {
-  private readonly route = inject(ActivatedRoute);
-  private readonly router = inject(Router);
-  private readonly recipeService = inject(RecipeService);
+  private readonly route              = inject(ActivatedRoute);
+  private readonly router             = inject(Router);
+  private readonly recipeService      = inject(RecipeService);
   private readonly translationService = inject(TranslationService);
 
-  public readonly recipe = signal<Recipe | null>(null);
-  public readonly isLoading = signal(true);
+  public readonly recipe        = signal<Recipe | null>(null);
+  public readonly isLoading     = signal(true);
   public readonly isTranslating = signal(false);
-  public readonly isFavorite = signal(false);
-  public readonly errorMessage = signal<string | null>(null);
+  public readonly isFavorite    = signal(false);
+  public readonly errorMessage  = signal<string | null>(null);
 
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id');
@@ -34,6 +34,7 @@ export class Details implements OnInit {
     }
   }
 
+  // ── Carga y traducción de la receta ───────────────────────────────────────
   loadRecipe(id: string): void {
     this.isLoading.set(true);
     this.recipeService.getRecipeById(id).subscribe({
@@ -43,21 +44,15 @@ export class Details implements OnInit {
           this.isLoading.set(false);
           return;
         }
-
         this.checkIfFavorite(recipe.idMeal);
         this.recipe.set(recipe);
         this.isLoading.set(false);
 
-        // Traducir los campos
+        // Traducir en segundo plano
         this.isTranslating.set(true);
         this.translateRecipe(recipe).subscribe({
-          next: translated => {
-            this.recipe.set(translated);
-            this.isTranslating.set(false);
-          },
-          error: () => {
-            this.isTranslating.set(false);
-          }
+          next:  translated => { this.recipe.set(translated); this.isTranslating.set(false); },
+          error: ()         => { this.isTranslating.set(false); }
         });
       },
       error: () => {
@@ -96,6 +91,21 @@ export class Details implements OnInit {
     );
   }
 
+  /**
+   * Divide las instrucciones en pasos individuales para mostrarlos numerados.
+   * Separa por saltos de línea dobles o por punto seguido de mayúscula.
+   */
+  getSteps(): string[] {
+    const instructions = this.recipe()?.strInstructions;
+    if (!instructions) return [];
+    return instructions
+      .split(/\r\n\r\n|\n\n/)           // Párrafos dobles primero
+      .flatMap(p => p.split(/\.\s+(?=[A-ZÁÉÍÓÚÑ])/))  // Luego oraciones
+      .map(s => s.trim())
+      .filter(s => s.length > 10);      // Filtrar pasos vacíos o muy cortos
+  }
+
+  // ── Favoritos ─────────────────────────────────────────────────────────────
   checkIfFavorite(idMeal: string): void {
     try {
       const favsStr = localStorage.getItem('recetas_favorites');
@@ -113,17 +123,13 @@ export class Details implements OnInit {
   toggleFavorite(): void {
     const currentRecipe = this.recipe();
     if (!currentRecipe) return;
-
     try {
       const favsStr = localStorage.getItem('recetas_favorites');
       let favs: Recipe[] = favsStr ? JSON.parse(favsStr) : [];
-
       if (this.isFavorite()) {
-        // Quitar de favoritos
         favs = favs.filter(r => r.idMeal !== currentRecipe.idMeal);
         this.isFavorite.set(false);
       } else {
-        // Añadir a favoritos (guardando una versión limpia del objeto de la receta)
         favs.push(currentRecipe);
         this.isFavorite.set(true);
       }
@@ -137,5 +143,3 @@ export class Details implements OnInit {
     window.history.back();
   }
 }
-
-

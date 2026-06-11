@@ -1,44 +1,87 @@
 <div class="details-page-container">
+
   @if (isLoading()) {
+    <!-- Loader caribeño animado -->
     <div class="loader-container">
       <div class="coconut-loader">🥥</div>
       <p>Cargando los secretos de esta receta...</p>
     </div>
+
   } @else if (errorMessage()) {
+    <!-- Error state -->
     <div class="error-container">
       <div class="error-icon">⚠️</div>
       <h3>¡Oops! Algo salió mal</h3>
       <p>{{ errorMessage() }}</p>
-      <button class="btn btn-primary" (click)="goBack()">Volver Atrás</button>
+      <button class="btn btn-primary" (click)="goBack()">← Volver Atrás</button>
     </div>
+
   } @else if (recipe()) {
-    <!-- Volver -->
+
+    <!-- Botón volver -->
     <div class="navigation-row">
       <button class="btn-back" (click)="goBack()">
         <span class="arrow">←</span> Volver
       </button>
     </div>
 
+    <!-- Grid principal de detalles -->
     <div class="recipe-detail-grid">
-      <!-- Media Panel -->
+
+      <!-- ══ Panel Izquierdo: Imagen + Info básica ══ -->
       <div class="recipe-media-panel">
+
         <div class="image-wrapper">
-          <img [src]="$safeNavigationMigration(recipe()?.strMealThumb)" [alt]="$safeNavigationMigration(recipe()?.strMeal)" />
-          <button class="btn-favorite-toggle" [class.is-fav]="isFavorite()" (click)="toggleFavorite()">
-            <span class="star-icon">★</span> {{ isFavorite() ? 'Guardado' : 'Guardar en Favoritos' }}
+          <img [src]="recipe()!.strMealThumb" [alt]="recipe()!.strMeal" />
+
+          <!-- Badge de traducción en proceso -->
+          @if (isTranslating()) {
+            <div class="translating-badge">
+              <span>🌴</span> Traduciendo...
+            </div>
+          }
+
+          <!-- Botón favorito flotante -->
+          <button
+            class="btn-favorite-toggle"
+            [class.is-fav]="isFavorite()"
+            (click)="toggleFavorite()"
+            [title]="isFavorite() ? 'Quitar de favoritos' : 'Guardar en favoritos'"
+          >
+            <span class="star-icon">{{ isFavorite() ? '★' : '☆' }}</span>
+            {{ isFavorite() ? 'Guardado ✓' : 'Guardar en Favoritos' }}
           </button>
         </div>
+
+        <!-- Info principal debajo de la imagen -->
         <div class="recipe-main-info">
-          <h2>{{ recipe()?.strMeal }}</h2>
+          <h2>{{ recipe()!.strMeal }}</h2>
           <div class="badges-row">
-            <span class="badge badge-primary"><span class="icon">📁</span> {{ recipe()?.strCategory }}</span>
-            <span class="badge badge-secondary"><span class="icon">🌍</span> {{ recipe()?.strArea }}</span>
+            <span class="badge badge-primary">
+              <span class="icon">📁</span> {{ recipe()!.strCategory }}
+            </span>
+            <span class="badge badge-secondary">
+              <span class="icon">🌍</span> {{ recipe()!.strArea }}
+            </span>
+            @if (recipe()!.strTags) {
+              <span class="badge badge-tag">
+                <span class="icon">🏷️</span> {{ recipe()!.strTags }}
+              </span>
+            }
+          </div>
+
+          <!-- Contador de ingredientes -->
+          <div class="ingredients-count">
+            <span class="count-icon">🍍</span>
+            <strong>{{ recipe()!.ingredients.length }}</strong> ingredientes necesarios
           </div>
         </div>
       </div>
 
-      <!-- Info Panel -->
+      <!-- ══ Panel Derecho: Ingredientes + Preparación + Video ══ -->
       <div class="recipe-info-panel">
+
+        <!-- Indicador de traducción -->
         @if (isTranslating()) {
           <div class="translation-loader">
             <span class="palm-icon">🌴</span>
@@ -46,36 +89,59 @@
           </div>
         }
 
-        <!-- Ingredients -->
+        <!-- Ingredientes -->
         <div class="info-section">
-          <h4 class="section-title"><span class="icon">🍍</span> Ingredientes Requeridos</h4>
+          <h4 class="section-title">
+            <span class="title-icon">🍍</span> Ingredientes Requeridos
+          </h4>
           <div class="ingredients-grid">
-            @for (item of recipe()?.ingredients; track item.name) {
+            @for (item of recipe()!.ingredients; track item.name) {
               <div class="ingredient-tag">
+                <span class="ing-dot">●</span>
                 <span class="ing-name">{{ item.name }}</span>
-                <span class="ing-measure">{{ item.measure }}</span>
+                @if (item.measure) {
+                  <span class="ing-measure">{{ item.measure }}</span>
+                }
               </div>
             }
           </div>
         </div>
 
-        <!-- Preparation -->
+        <!-- Preparación -->
         <div class="info-section">
-          <h4 class="section-title"><span class="icon">🍳</span> Preparación Paso a Paso</h4>
-          <p class="instructions-text">{{ recipe()?.strInstructions }}</p>
+          <h4 class="section-title">
+            <span class="title-icon">🍳</span> Preparación Paso a Paso
+          </h4>
+          <div class="instructions-block">
+            @for (step of getSteps(); track $index) {
+              <div class="step-item">
+                <span class="step-number">{{ $index + 1 }}</span>
+                <p class="step-text">{{ step }}</p>
+              </div>
+            }
+          </div>
         </div>
 
-        <!-- YouTube Video -->
-        @if (recipe()?.strYoutube) {
+        <!-- Video de YouTube -->
+        @if (recipe()!.strYoutube) {
           <div class="info-section youtube-section">
-            <h4 class="section-title"><span class="icon">📺</span> Video Tutorial</h4>
+            <h4 class="section-title">
+              <span class="title-icon">📺</span> Video Tutorial
+            </h4>
             <p class="video-desc">Mira el paso a paso detallado directamente en YouTube.</p>
-            <a [href]="$safeNavigationMigration(recipe()?.strYoutube)" target="_blank" class="btn btn-video">
-              Ver Tutorial en YouTube
+            <a
+              [href]="recipe()!.strYoutube"
+              target="_blank"
+              rel="noopener"
+              class="btn btn-video"
+            >
+              ▶ Ver Tutorial en YouTube
             </a>
           </div>
         }
+
       </div>
     </div>
   }
+
 </div>

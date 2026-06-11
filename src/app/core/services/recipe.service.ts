@@ -82,4 +82,16 @@ export class RecipeService {
       })
     );
   }
+
+  /**
+   * Obtiene recetas por categoría usando /filter.php?c=
+   */
+  getRecipesByCategory(category: string): Observable<Recipe[]> {
+    return this.http.get<MealResponse>(`/filter.php?c=${category}`).pipe(
+      map(response => {
+        if (!response.meals) return [];
+        return response.meals.map(meal => this.parseIngredients(meal));
+      })
+    );
+  }
 }
