@@ -90,13 +90,19 @@
 
 .footer-links li {
   font-size: 0.9rem;
-  color: var(--text-muted);
   font-weight: 600;
-  cursor: pointer;
   transition: var(--transition-smooth);
 }
 
-.footer-links li:hover {
+.footer-link-item {
+  color: var(--text-muted);
+  text-decoration: none;
+  display: inline-block;
+  transition: var(--transition-smooth);
+  width: 100%;
+}
+
+.footer-link-item:hover {
   color: var(--color-papaya);
   transform: translateX(4px);
 }

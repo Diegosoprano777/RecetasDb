@@ -12,10 +12,13 @@
     <div class="footer-links">
       <h4>Categorías Populares</h4>
       <ul>
-        <li>🌴 Recetas con Pollo</li>
-        <li>🥩 Cortes de Carne</li>
-        <li>🦞 Mariscos Frescos</li>
-        <li>🍹 Postres y Bebidas</li>
+        @for (cat of popularCategories; track cat.query) {
+          <li>
+            <a [routerLink]="['/search']" [queryParams]="{ q: cat.query }" class="footer-link-item">
+              {{ cat.icon }} {{ cat.label }}
+            </a>
+          </li>
+        }
       </ul>
     </div>
 

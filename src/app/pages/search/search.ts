@@ -1,7 +1,7 @@
 import { Component, OnInit, signal, inject, effect, computed, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule, SlicePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterModule } from '@angular/router';
+import { Router, RouterModule, ActivatedRoute } from '@angular/router';
 import { RecipeService, Recipe } from '../../core/services/recipe.service';
 import { TranslationService } from '../../core/services/translation.service';
 import { forkJoin, map, of, switchMap } from 'rxjs';
@@ -18,6 +18,7 @@ export class Search implements OnInit {
   private readonly recipeService     = inject(RecipeService);
   private readonly translationService = inject(TranslationService);
   private readonly router            = inject(Router);
+  private readonly route             = inject(ActivatedRoute);
 
   // ── Signals de estado ─────────────────────────────────────────────────────
   public readonly searchQuery  = signal('');
@@ -83,7 +84,10 @@ export class Search implements OnInit {
   }
 
   ngOnInit(): void {
-    this.search('Chicken'); // Búsqueda inicial por defecto
+    this.route.queryParams.subscribe(params => {
+      const q = params['q'];
+      this.search(q || 'Chicken');
+    });
   }
 
   // ── Traduce los campos visibles en la tarjeta vía API ────────────────────
