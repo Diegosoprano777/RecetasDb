@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, inject } from '@angular/core';
+import { Component, OnInit, signal, inject, ChangeDetectionStrategy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { SlicePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
@@ -11,6 +11,7 @@ import { forkJoin, map, Observable, of, switchMap } from 'rxjs';
   standalone: true,
   imports: [FormsModule, SlicePipe, RouterLink],
   templateUrl: './home.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './home.css'
 })
 export class Home implements OnInit {

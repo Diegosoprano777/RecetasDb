@@ -10,8 +10,8 @@
             <span class="meta-badge"><span class="icon">📁</span> {{ featuredRecipe()?.strCategory }}</span>
             <span class="meta-badge"><span class="icon">🌍</span> {{ featuredRecipe()?.strArea }}</span>
           </div>
-          <p class="hero-description">{{ featuredRecipe()?.strInstructions | slice:0:180 }}...</p>
-          <button class="btn btn-primary animate-btn" [routerLink]="['/details', featuredRecipe()?.idMeal]">
+          <p class="hero-description">{{ $safeNavigationMigration(featuredRecipe()?.strInstructions) | slice:0:180 }}...</p>
+          <button class="btn btn-primary animate-btn" [routerLink]="['/details', $safeNavigationMigration(featuredRecipe()?.idMeal)]">
             <span class="icon">📖</span> Ver Receta Completa
           </button>
         </div>

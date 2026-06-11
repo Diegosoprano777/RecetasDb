@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, inject, effect, computed } from '@angular/core';
+import { Component, OnInit, signal, inject, effect, computed, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule, SlicePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
@@ -11,6 +11,7 @@ import { forkJoin, map, of, switchMap } from 'rxjs';
   standalone: true,
   imports: [CommonModule, SlicePipe, FormsModule, RouterModule],
   templateUrl: './search.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './search.css'
 })
 export class Search implements OnInit {

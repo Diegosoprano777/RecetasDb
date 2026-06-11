@@ -1,4 +1,4 @@
-﻿import { Component, OnInit, signal, inject } from '@angular/core';
+﻿import { Component, OnInit, signal, inject, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterModule, Router } from '@angular/router';
 import { RecipeService, Recipe } from '../../core/services/recipe.service';
@@ -10,6 +10,7 @@ import { forkJoin, map, Observable, of } from 'rxjs';
   standalone: true,
   imports: [CommonModule, RouterModule],
   templateUrl: './details.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './details.css'
 })
 export class Details implements OnInit {

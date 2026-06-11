@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { Header } from './components/header/header';
 import { Footer } from './components/footer/footer';
@@ -8,6 +8,7 @@ import { Footer } from './components/footer/footer';
   standalone: true,
   imports: [RouterOutlet, Header, Footer],
   templateUrl: './app.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './app.css'
 })
 export class App {}

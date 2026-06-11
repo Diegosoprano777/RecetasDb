@@ -1,4 +1,4 @@
-﻿import { Component, OnInit, signal, inject } from '@angular/core';
+﻿import { Component, OnInit, signal, inject, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule, SlicePipe } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { Recipe } from '../../core/services/recipe.service';
@@ -8,6 +8,7 @@ import { Recipe } from '../../core/services/recipe.service';
   standalone: true,
   imports: [CommonModule, SlicePipe, RouterModule],
   templateUrl: './favorites.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './favorites.css'
 })
 export class Favorites implements OnInit {

@@ -23,7 +23,7 @@
       <!-- Media Panel -->
       <div class="recipe-media-panel">
         <div class="image-wrapper">
-          <img [src]="recipe()?.strMealThumb" [alt]="recipe()?.strMeal" />
+          <img [src]="$safeNavigationMigration(recipe()?.strMealThumb)" [alt]="$safeNavigationMigration(recipe()?.strMeal)" />
           <button class="btn-favorite-toggle" [class.is-fav]="isFavorite()" (click)="toggleFavorite()">
             <span class="star-icon">★</span> {{ isFavorite() ? 'Guardado' : 'Guardar en Favoritos' }}
           </button>
@@ -70,7 +70,7 @@
           <div class="info-section youtube-section">
             <h4 class="section-title"><span class="icon">📺</span> Video Tutorial</h4>
             <p class="video-desc">Mira el paso a paso detallado directamente en YouTube.</p>
-            <a [href]="recipe()?.strYoutube" target="_blank" class="btn btn-video">
+            <a [href]="$safeNavigationMigration(recipe()?.strYoutube)" target="_blank" class="btn btn-video">
               Ver Tutorial en YouTube
             </a>
           </div>
